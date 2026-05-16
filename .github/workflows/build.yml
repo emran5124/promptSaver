@@ -1,15 +1,14 @@
-name: Build PromptVault APK
+name: Build PromptVault APK3
 
 on:
   push:
     branches: [ main, master ]
   pull_request:
     branches: [ main, master ]
-  workflow_dispatch:  # Allow manual trigger from GitHub UI
+  workflow_dispatch:
 
 jobs:
   build:
-    name: Build Debug & Release APK
     runs-on: ubuntu-latest
 
     steps:
@@ -21,78 +20,70 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
-          cache: gradle
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Accept Android SDK licenses
+        run: yes | sdkmanager --licenses || true
+
+      - name: Install required SDK components
+        run: |
+          sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
 
       - name: Download Gradle Wrapper JAR
         run: |
           mkdir -p gradle/wrapper
-          curl -fsSL "https://github.com/gradle/gradle/raw/v8.4.0/gradle/wrapper/gradle-wrapper.jar" \
+          curl -fsSL \
+            "https://raw.githubusercontent.com/gradle/gradle/v8.4.0/gradle/wrapper/gradle-wrapper.jar" \
             -o gradle/wrapper/gradle-wrapper.jar
-          echo "Gradle wrapper JAR downloaded:"
-          ls -lh gradle/wrapper/
 
-      - name: Grant execute permission to gradlew
+      - name: Make gradlew executable
         run: chmod +x gradlew
 
-      - name: Cache Gradle packages
+      - name: Cache Gradle
         uses: actions/cache@v4
         with:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: |
-            ${{ runner.os }}-gradle-
+          key: gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: gradle-
 
       - name: Build Debug APK
-        run: ./gradlew assembleDebug --stacktrace
+        run: ./gradlew assembleDebug --stacktrace --no-daemon
+        env:
+          ANDROID_HOME: ${{ env.ANDROID_HOME }}
 
-      - name: Build Release APK (debug-signed for personal use)
-        run: ./gradlew assembleRelease --stacktrace
+      - name: Build Release APK
+        run: ./gradlew assembleRelease --stacktrace --no-daemon
+        env:
+          ANDROID_HOME: ${{ env.ANDROID_HOME }}
 
-      - name: Get version info
-        id: version
+      - name: Get version name
+        id: ver
         run: |
-          VERSION_CODE=$(grep 'versionCode' app/build.gradle | tr -dc '0-9')
-          VERSION_NAME=$(grep 'versionName' app/build.gradle | sed 's/.*"\(.*\)".*/\1/')
-          echo "version_code=$VERSION_CODE" >> $GITHUB_OUTPUT
-          echo "version_name=$VERSION_NAME" >> $GITHUB_OUTPUT
-          echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
-
-      - name: Rename APKs
-        run: |
-          mkdir -p artifacts
-          cp app/build/outputs/apk/debug/app-debug.apk \
-             artifacts/PromptVault-v${{ steps.version.outputs.version_name }}-debug.apk
-          cp app/build/outputs/apk/release/app-release.apk \
-             artifacts/PromptVault-v${{ steps.version.outputs.version_name }}-release.apk
+          V=$(grep 'versionName' app/build.gradle | grep -o '".*"' | tr -d '"')
+          echo "name=$V" >> $GITHUB_OUTPUT
 
       - name: Upload Debug APK
         uses: actions/upload-artifact@v4
         with:
-          name: PromptVault-Debug-v${{ steps.version.outputs.version_name }}
-          path: artifacts/PromptVault-v${{ steps.version.outputs.version_name }}-debug.apk
+          name: PromptVault-v${{ steps.ver.outputs.name }}-debug
+          path: app/build/outputs/apk/debug/app-debug.apk
           retention-days: 30
 
       - name: Upload Release APK
         uses: actions/upload-artifact@v4
         with:
-          name: PromptVault-Release-v${{ steps.version.outputs.version_name }}
-          path: artifacts/PromptVault-v${{ steps.version.outputs.version_name }}-release.apk
+          name: PromptVault-v${{ steps.ver.outputs.name }}-release
+          path: app/build/outputs/apk/release/app-release.apk
           retention-days: 90
 
-      # Optional: Auto-create GitHub Release on version tag (e.g. git tag v1.0)
-      - name: Create GitHub Release (on tag push)
+      - name: Create Release on tag
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            artifacts/PromptVault-v${{ steps.version.outputs.version_name }}-debug.apk
-            artifacts/PromptVault-v${{ steps.version.outputs.version_name }}-release.apk
-          body: |
-            ## PromptVault v${{ steps.version.outputs.version_name }}
-            ساخته شده در تاریخ ${{ steps.version.outputs.date }}
-            
-            ### نصب
-            فایل APK را دانلود کرده و روی دستگاه اندروید خود نصب کنید.
-            (در صورت نیاز، "نصب از منابع ناشناس" را در تنظیمات فعال کنید)
+            app/build/outputs/apk/debug/app-debug.apk
+            app/build/outputs/apk/release/app-release.apk
