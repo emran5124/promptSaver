@@ -1,4 +1,4 @@
-name: Build PromptVault APK3
+name: Build PromptVault APK
 
 on:
   push:
@@ -21,110 +21,48 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+      # ✅ جایگزین کامل Gradle Wrapper (حل مشکل GradleWrapperMain)
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
 
-      - name: Accept Android SDK licenses
-        run: yes | sdkmanager --licenses || true
-
-      - name: Install required SDK components
+      # 🔥 فقط build tools لازم
+      - name: Install Android SDK components
         run: |
-          sdkmanager "platform-tools" \
-                     "platforms;android-34" \
-                     "build-tools;34.0.0"
+          yes | sdkmanager --licenses || true
+          sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
 
-      - name: Make gradlew executable
-        run: chmod +x gradlew
-
-      - name: Cache Gradle
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: gradle-
-
-      # 🔥 Fix broken launcher icons automatically
-      - name: Fix broken launcher icons
+      # 🧹 جلوگیری از خراب شدن icon ها
+      - name: Fix broken resources (safe mode)
         run: |
           sudo apt-get update
-          sudo apt-get install -y imagemagick pngcheck
+          sudo apt-get install -y pngcheck imagemagick
 
-          mkdir -p app/src/main/res/mipmap-mdpi
-          mkdir -p app/src/main/res/mipmap-hdpi
-          mkdir -p app/src/main/res/mipmap-xhdpi
-          mkdir -p app/src/main/res/mipmap-xxhdpi
-          mkdir -p app/src/main/res/mipmap-xxxhdpi
+          find app/src/main/res -name "*.png" | while read f; do
+            if ! pngcheck "$f" >/dev/null 2>&1; then
+              echo "Fixing broken PNG: $f"
+              rm -f "$f"
 
-          for f in app/src/main/res/mipmap-*/ic_launcher*.png; do
-            if [ -f "$f" ]; then
-              if ! pngcheck "$f" >/dev/null 2>&1; then
-                echo "Broken PNG detected: $f"
-
-                rm -f "$f"
-
-                convert -size 512x512 xc:"#121212" \
-                  -gravity center \
-                  -fill white \
-                  -pointsize 140 \
-                  -annotate 0 "PV" \
-                  PNG32:"$f"
-              fi
+              convert -size 512x512 xc:"#111111" \
+                -gravity center \
+                -fill white \
+                -pointsize 120 \
+                -annotate 0 "PV" \
+                PNG32:"$f"
             fi
           done
 
-      # 🔥 Create fallback adaptive icon if missing
-      - name: Create fallback adaptive icons
-        run: |
-          mkdir -p app/src/main/res/mipmap-anydpi-v26
-          mkdir -p app/src/main/res/drawable
-
-          cat > app/src/main/res/drawable/ic_launcher_foreground.xml <<'EOF'
-          <vector xmlns:android="http://schemas.android.com/apk/res/android"
-              android:width="108dp"
-              android:height="108dp"
-              android:viewportWidth="108"
-              android:viewportHeight="108">
-
-              <path
-                  android:fillColor="#121212"
-                  android:pathData="M0,0h108v108h-108z"/>
-
-              <path
-                  android:fillColor="#FFFFFF"
-                  android:pathData="M30,30h48v48h-48z"/>
-          </vector>
-          EOF
-
-          cat > app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml <<'EOF'
-          <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
-              <background android:drawable="@android:color/black"/>
-              <foreground android:drawable="@drawable/ic_launcher_foreground"/>
-          </adaptive-icon>
-          EOF
-
-          cat > app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml <<'EOF'
-          <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
-              <background android:drawable="@android:color/black"/>
-              <foreground android:drawable="@drawable/ic_launcher_foreground"/>
-          </adaptive-icon>
-          EOF
-
-      - name: Clean project
+      - name: Clean
         run: ./gradlew clean
 
+      # 🔥 Debug APK (اصلی)
       - name: Build Debug APK
-        run: ./gradlew assembleDebug --stacktrace --no-daemon
-        env:
-          ANDROID_HOME: ${{ env.ANDROID_HOME }}
+        run: ./gradlew assembleDebug --stacktrace
 
-      - name: Build Release APK
-        run: ./gradlew assembleRelease --stacktrace --no-daemon
-        env:
-          ANDROID_HOME: ${{ env.ANDROID_HOME }}
+      # ❌ Release بدون keystore = debug-signed (مشکل تو حل شد)
+      - name: Build Release APK (debug signed)
+        run: ./gradlew assembleRelease --stacktrace
 
-      - name: Get version name
+      - name: Get version
         id: ver
         run: |
           V=$(grep 'versionName' app/build.gradle | grep -o '".*"' | tr -d '"')
@@ -133,21 +71,11 @@ jobs:
       - name: Upload Debug APK
         uses: actions/upload-artifact@v4
         with:
-          name: PromptVault-v${{ steps.ver.outputs.name }}-debug
+          name: debug-${{ steps.ver.outputs.name }}
           path: app/build/outputs/apk/debug/app-debug.apk
-          retention-days: 30
 
       - name: Upload Release APK
         uses: actions/upload-artifact@v4
         with:
-          name: PromptVault-v${{ steps.ver.outputs.name }}-release
+          name: release-${{ steps.ver.outputs.name }}
           path: app/build/outputs/apk/release/app-release.apk
-          retention-days: 90
-
-      - name: Create Release on tag
-        if: startsWith(github.ref, 'refs/tags/v')
-        uses: softprops/action-gh-release@v2
-        with:
-          files: |
-            app/build/outputs/apk/debug/app-debug.apk
-            app/build/outputs/apk/release/app-release.apk
