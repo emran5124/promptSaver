@@ -44,7 +44,7 @@ public class MainActivity extends AppCompatActivity implements PromptAdapter.OnP
     private Spinner spinnerFilter;
     private View emptyState;
 
-    private String currentFilter = "all"; // all, favorites, or category name
+    private String currentFilter = "all";
     private String currentSearch = "";
 
     private final ActivityResultLauncher<Intent> addEditLauncher =
@@ -56,11 +56,19 @@ public class MainActivity extends AppCompatActivity implements PromptAdapter.OnP
             registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
                 if (result.getResultCode() == RESULT_OK && result.getData() != null) {
                     Uri uri = result.getData().getData();
-                    JsonSyncManager.syncFromUri(this, uri, (imported, updated) -> {
-                        loadPrompts();
-                        String msg = "وارد شد: " + imported + " جدید، " + updated + " بروزرسانی";
-                        Snackbar.make(recyclerView, msg, Snackbar.LENGTH_LONG).show();
-                    }, error -> Snackbar.make(recyclerView, error, Snackbar.LENGTH_LONG).show());
+                    JsonSyncManager.syncFromUri(this, uri, new JsonSyncManager.SyncCallback() {
+                        @Override
+                        public void onSuccess(int imported, int updated) {
+                            setupFilterSpinner();
+                            loadPrompts();
+                            String msg = "وارد شد: " + imported + " جدید، " + updated + " بروزرسانی";
+                            Snackbar.make(recyclerView, msg, Snackbar.LENGTH_LONG).show();
+                        }
+                        @Override
+                        public void onError(String message) {
+                            Snackbar.make(recyclerView, message, Snackbar.LENGTH_LONG).show();
+                        }
+                    });
                 }
             });
 
@@ -111,8 +119,7 @@ public class MainActivity extends AppCompatActivity implements PromptAdapter.OnP
         List<String> items = new ArrayList<>();
         items.add("همه");
         items.add("★ موردعلاقه");
-        List<String> cats = db.getAllCategories();
-        items.addAll(cats);
+        items.addAll(db.getAllCategories());
 
         ArrayAdapter<String> arr = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, items);
         arr.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -215,20 +222,24 @@ public class MainActivity extends AppCompatActivity implements PromptAdapter.OnP
     }
 
     private void doSync() {
-        JsonSyncManager.syncFromDownloads(this,
-                (imported, updated) -> {
-                    setupFilterSpinner();
-                    loadPrompts();
-                    String msg = "همگام‌سازی موفق: " + imported + " جدید، " + updated + " بروزرسانی";
-                    Snackbar.make(recyclerView, msg, Snackbar.LENGTH_LONG).show();
-                },
-                error -> Snackbar.make(recyclerView, error, Snackbar.LENGTH_LONG).show()
-        );
+        JsonSyncManager.syncFromDownloads(this, new JsonSyncManager.SyncCallback() {
+            @Override
+            public void onSuccess(int imported, int updated) {
+                setupFilterSpinner();
+                loadPrompts();
+                String msg = "همگام‌سازی موفق: " + imported + " جدید، " + updated + " بروزرسانی";
+                Snackbar.make(recyclerView, msg, Snackbar.LENGTH_LONG).show();
+            }
+            @Override
+            public void onError(String message) {
+                Snackbar.make(recyclerView, message, Snackbar.LENGTH_LONG).show();
+            }
+        });
     }
 
     private void openFilePicker() {
         Intent i = new Intent(Intent.ACTION_GET_CONTENT);
-        i.setType("application/json");
+        i.setType("*/*");
         i.addCategory(Intent.CATEGORY_OPENABLE);
         filePicker.launch(Intent.createChooser(i, "انتخاب فایل JSON"));
     }

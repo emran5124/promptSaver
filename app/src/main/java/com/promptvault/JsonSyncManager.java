@@ -70,7 +70,6 @@ public class JsonSyncManager {
             List<Prompt> prompts = new ArrayList<>();
 
             if (root.isJsonArray()) {
-                // Format: [ {...}, {...} ]
                 JsonArray arr = root.getAsJsonArray();
                 for (JsonElement el : arr) {
                     Prompt p = parsePrompt(el.getAsJsonObject());
@@ -78,7 +77,6 @@ public class JsonSyncManager {
                 }
             } else if (root.isJsonObject()) {
                 JsonObject obj = root.getAsJsonObject();
-                // Format: { "prompts": [ {...}, {...} ] }
                 if (obj.has("prompts") && obj.get("prompts").isJsonArray()) {
                     JsonArray arr = obj.getAsJsonArray("prompts");
                     for (JsonElement el : arr) {
@@ -86,7 +84,6 @@ public class JsonSyncManager {
                         if (p != null) prompts.add(p);
                     }
                 } else {
-                    // Single prompt object
                     Prompt p = parsePrompt(obj);
                     if (p != null) prompts.add(p);
                 }
@@ -106,9 +103,7 @@ public class JsonSyncManager {
                 for (Prompt ex : existing) {
                     if (ex.getId().equals(incoming.getId())) {
                         found = true;
-                        if (incoming.getUpdatedAt() > ex.getUpdatedAt()) {
-                            updateCount++;
-                        }
+                        if (incoming.getUpdatedAt() > ex.getUpdatedAt()) updateCount++;
                         break;
                     }
                 }
