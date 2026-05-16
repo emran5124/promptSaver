@@ -1,0 +1,38 @@
+{
+  "version": "1.0",
+  "prompts": [
+    {
+      "id": "sample-001",
+      "title": "کد پایتون بنویس",
+      "content": "یک کد پایتون بنویس که [کار موردنظر] را انجام دهد. کد باید:\n- خوانا و مستندسازی‌شده باشد\n- مدیریت خطا داشته باشد\n- کارآمد و بهینه باشد\nمثال ورودی: [مثال]\nخروجی مورد انتظار: [خروجی]",
+      "category": "کدنویسی",
+      "tags": "code, python, programming",
+      "aiModel": "ChatGPT",
+      "createdAt": 1700000000000,
+      "updatedAt": 1700000000000,
+      "isFavorite": true
+    },
+    {
+      "id": "sample-002",
+      "title": "خلاصه‌سازی متن",
+      "content": "متن زیر را به فارسی خلاصه کن. خلاصه باید:\n- حداکثر 3 پاراگراف باشد\n- نکات کلیدی را حفظ کند\n- ساده و قابل فهم باشد\n\nمتن:\n[متن را اینجا قرار دهید]",
+      "category": "ترجمه و خلاصه",
+      "tags": "summary, persian, text",
+      "aiModel": "Claude",
+      "createdAt": 1700100000000,
+      "updatedAt": 1700100000000,
+      "isFavorite": false
+    },
+    {
+      "id": "sample-003",
+      "title": "تصویر با Midjourney",
+      "content": "A stunning [subject], [art style], [lighting], [mood], highly detailed, 8k resolution, professional photography, --ar 16:9 --v 6 --q 2",
+      "category": "تولید تصویر",
+      "tags": "midjourney, image, art",
+      "aiModel": "Midjourney",
+      "createdAt": 1700200000000,
+      "updatedAt": 1700200000000,
+      "isFavorite": false
+    }
+  ]
+}

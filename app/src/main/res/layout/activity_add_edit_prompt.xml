@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/bg_dark">
+
+    <include layout="@layout/toolbar_default" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="عنوان *"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp"
+                android:layoutDirection="rtl"
+                android:layout_marginBottom="4dp" />
+
+            <EditText
+                android:id="@+id/et_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_input"
+                android:hint="عنوان پرامپت"
+                android:textColorHint="@color/text_hint"
+                android:textColor="@color/text_primary"
+                android:padding="12dp"
+                android:textSize="15sp"
+                android:layoutDirection="rtl"
+                android:textDirection="rtl"
+                android:layout_marginBottom="16dp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="مدل هوش مصنوعی"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp"
+                android:layoutDirection="rtl"
+                android:layout_marginBottom="4dp" />
+
+            <AutoCompleteTextView
+                android:id="@+id/et_model"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_input"
+                android:hint="مثلاً: ChatGPT، Claude، Gemini..."
+                android:textColorHint="@color/text_hint"
+                android:textColor="@color/text_primary"
+                android:padding="12dp"
+                android:textSize="14sp"
+                android:completionThreshold="1"
+                android:layout_marginBottom="16dp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="دسته‌بندی"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp"
+                android:layoutDirection="rtl"
+                android:layout_marginBottom="4dp" />
+
+            <AutoCompleteTextView
+                android:id="@+id/et_category"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_input"
+                android:hint="مثلاً: کدنویسی، ترجمه، تحلیل..."
+                android:textColorHint="@color/text_hint"
+                android:textColor="@color/text_primary"
+                android:padding="12dp"
+                android:textSize="14sp"
+                android:layoutDirection="rtl"
+                android:textDirection="rtl"
+                android:layout_marginBottom="16dp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="تگ‌ها (با کاما جدا کنید)"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp"
+                android:layoutDirection="rtl"
+                android:layout_marginBottom="4dp" />
+
+            <EditText
+                android:id="@+id/et_tags"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_input"
+                android:hint="مثلاً: code, python, debug"
+                android:textColorHint="@color/text_hint"
+                android:textColor="@color/text_primary"
+                android:padding="12dp"
+                android:textSize="14sp"
+                android:layout_marginBottom="16dp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="محتوای پرامپت *"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp"
+                android:layoutDirection="rtl"
+                android:layout_marginBottom="4dp" />
+
+            <EditText
+                android:id="@+id/et_content"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:minHeight="160dp"
+                android:background="@drawable/bg_input"
+                android:hint="متن پرامپت را اینجا وارد کنید..."
+                android:textColorHint="@color/text_hint"
+                android:textColor="@color/text_primary"
+                android:padding="12dp"
+                android:textSize="14sp"
+                android:gravity="top|start"
+                android:inputType="textMultiLine"
+                android:scrollbars="vertical"
+                android:layoutDirection="rtl"
+                android:textDirection="rtl"
+                android:lineSpacingMultiplier="1.4"
+                android:layout_marginBottom="20dp" />
+
+        </LinearLayout>
+
+    </ScrollView>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="16dp"
+        android:background="@color/surface_dark">
+
+        <Button
+            android:id="@+id/btn_cancel"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:layout_marginEnd="8dp"
+            android:text="انصراف"
+            android:backgroundTint="@color/surface_elevated"
+            android:textColor="@color/text_secondary" />
+
+        <Button
+            android:id="@+id/btn_save"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:layout_marginStart="8dp"
+            android:text="ذخیره"
+            android:backgroundTint="@color/accent"
+            android:textColor="@color/bg_dark"
+            android:textStyle="bold" />
+
+    </LinearLayout>
+
+</LinearLayout>
